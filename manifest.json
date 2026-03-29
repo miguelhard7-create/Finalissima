@@ -1,0 +1,24 @@
+{
+  "name": "GORDIN DO XIT SUPREME",
+  "short_name": "GORDIN XIT",
+  "description": "Painel de Auxílio e Otimização Supreme V2",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#ff0000",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://i.ibb.co/JWzrtJ9v/IMG-20260327-015146.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "https://i.ibb.co/JWzrtJ9v/IMG-20260327-015146.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}
