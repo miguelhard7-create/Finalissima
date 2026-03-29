@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GORDIN DO XIT - SUPREME V2 BLACK OPS</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ff0000">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/JWzrtJ9v/IMG-20260327-015146.jpg">
+
+    <style>
+        :root {
+            --primary-red: #ff0000;
+            --bg-dark: #000000;
+            --panel-border: #333;
+            --text-gray: #bbb;
+            --row-bg: #0a0a0a;
+            --neon-glow: 0 0 15px rgba(255, 0, 0, 0.7);
+            --terminal-green: #00ff41;
+            --shadow-red: 0 0 10px #ff0000;
+        }
+
+        body {
+            background-color: transparent !important;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* --- Terminal de Injeção Hacker --- */
+        #injection-terminal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 30000;
+            display: none;
+            color: var(--terminal-green);
+            font-family: 'Courier New', Courier, monospace;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            font-size: 12px;
+            text-shadow: 0 0 5px var(--terminal-green);
+        }
+
+        /* --- Círculo de Mira (FOV) --- */
+        #fov-circle {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px solid white;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1;
+            display: none;
+            box-shadow: 0 0 20px rgba(255,255,255,0.3);
+            animation: rgb-cycle 2s linear infinite;
+        }
+
+        @keyframes rgb-cycle {
+            0% { border-color: #ff0000; box-shadow: 0 0 20px #ff0000; }
+            33% { border-color: #00ff00; box-shadow: 0 0 20px #00ff00; }
+            66% { border-color: #0000ff; box-shadow: 0 0 20px #0000ff; }
+            100% { border-color: #ff0000; box-shadow: 0 0 20px #ff0000; }
+        }
+
+        /* --- Bolinha Flutuante --- */
+        #floating-bubble {
+            width: 65px;
+            height: 65px;
+            background-color: #000; 
+            border-radius: 50%;
+            position: fixed;
+            top: 30%;
+            left: 15px;
+            cursor: pointer;
+            box-shadow: var(--neon-glow);
+            z-index: 10000;
+            border: 3px solid #fff;
+            background-image: url('https://i.ibb.co/JWzrtJ9v/IMG-20260327-015146.jpg');
+            background-size: cover;
+            background-position: center;
+            transition: transform 0.2s;
+        }
+        #floating-bubble:active { transform: scale(0.9); }
+
+        /* --- Painel Principal --- */
+        .panel {
+            width: 350px;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--panel-border);
+            color: white;
+            position: fixed;
+            top: 40px;
+            left: 15px;
+            display: none;
+            flex-direction: column;
+            user-select: none;
+            box-shadow: 0 0 50px rgba(0,0,0,1);
+            z-index: 9999;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: var(--primary-red);
+            padding: 15px;
+            text-align: center;
+            font-weight: 1000;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .header .close-x {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            background: #050505;
+            border-bottom: 2px solid var(--panel-border);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            border-right: 1px solid #1a1a1a;
+            transition: 0.3s;
+            color: #777;
+        }
+
+        .tab.active { background-color: #111; color: var(--primary-red); box-shadow: inset 0 -3px 0 var(--primary-red); }
+
+        .content {
+            padding: 15px;
+            max-height: 500px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .content.active { display: block; }
+        .content::-webkit-scrollbar { width: 3px; }
+        .content::-webkit-scrollbar-thumb { background: var(--primary-red); }
+
+        /* --- UI Componentes --- */
+        .row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 10px;
+            background: var(--row-bg);
+            border-radius: 5px;
+            justify-content: space-between;
+            border: 1px solid #111;
+        }
+
+        .check-box {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--primary-red);
+            background: #000;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: 0.2s;
+        }
+
+        .check-box.active { background: var(--primary-red); box-shadow: var(--shadow-red); }
+        .check-box.active::after { content: '✓'; color: white; font-weight: bold; }
+
+        .label { font-size: 13px; flex-grow: 1; margin-left: 12px; color: #eee; }
+
+        .btn-inject-action {
+            width: 100%;
+            padding: 14px;
+            background: #fff;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            font-weight: 1000;
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: 0.3s;
+            letter-spacing: 1px;
+        }
+
+        .btn-inject-action:hover {
+            background: var(--primary-red);
+            color: #fff;
+            box-shadow: var(--neon-glow);
+        }
+
+        .switch { width: 42px; height: 22px; background: #333; border-radius: 15px; position: relative; cursor: pointer; transition: 0.3s; }
+        .switch.on { background: var(--primary-red); box-shadow: var(--shadow-red); }
+        .switch::before { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: 0.3s; }
+        .switch.on::before { left: 22px; }
+
+        .section-title { font-size: 10px; color: var(--primary-red); text-transform: uppercase; margin: 15px 0 8px 5px; font-weight: bold; letter-spacing: 1px; }
+        .disabled-ui { opacity: 0.2; pointer-events: none; filter: blur(1px); }
+
+        input[type=range] { width: 100%; accent-color: var(--primary-red); cursor: pointer; }
+        select { background: #111; border: 1px solid var(--panel-border); color: white; padding: 10px; width: 100%; border-radius: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="injection-terminal"></div>
+<div id="fov-circle"></div>
+<div id="floating-bubble"></div>
+
+<div class="panel" id="mainPanel">
+    <div class="header">
+        GORDIN DO XIT | SUPREME
+        <span class="close-x" onclick="closePanel()">X</span>
+    </div>
+    
+    <div class="tabs">
+        <div class="tab active" onclick="openTab(event, 'trick')">🎯 TRICK</div>
+        <div class="tab" onclick="openTab(event, 'auxilio')">👁️ AUXÍLIO</div>
+        <div class="tab" onclick="openTab(event, 'info')">👤 INFO</div>
+    </div>
+
+    <div id="trick" class="content active">
+        <button class="btn-inject-action" onclick="iniciarInjecao()">INJETAR SCRIPTS NO FF</button>
+
+        <div class="row" style="background: #1a0000; border: 1px solid var(--primary-red);">
+            <span class="label" style="font-weight: 1000;">ATIVAR FUNÇÕES GERAIS</span>
+            <div class="switch" id="masterSwitch" onclick="toggleMaster(this)"></div>
+        </div>
+
+        <div id="trick-functions" class="disabled-ui">
+            <div class="section-title">Aimbot Elite</div>
+            <div class="row"><div class="check-box" onclick="toggleCheck(this)"></div><span class="label">Aimbot Full 100%</span></div>
+            <div class="row"><div class="check-box" onclick="toggleCheck(this)"></div><span class="label">Auto Headshot (Hs-Calibrado)</span></div>
+            <div class="row"><div class="check-box" onclick="toggleCheck(this)"></div><span class="label">Aim Lock (Travar na Mira)</span></div>
+            <div class="row"><div class="check-box" onclick="toggleCheck(this)"></div><span class="label">Tiro Mágico (Hitbox 2.0)</span></div>
+            <div class="row"><div class="check-box" onclick="toggleCheck(this)"></div><span class="label">No Recoil (Zero Coice)</span></div>
+            <div class="row"><div class="check-box" onclick="toggleCheck(this)"></div><span class="label">Fast Reload (Recarga)</span></div>
+            <div class="row"><div class="check-box" onclick="toggleCheck(this)"></div><span class="label">Aim Smooth (Suavidade)</span></div>
+
+            <div class="section-title">Ajustes de Mira</div>
+            <div style="background: var(--row-bg); padding: 12px; border-radius: 5px; margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px;">
+                    <span>FOV (Tamanho do Círculo)</span><span id="fovVal">25px</span>
+                </div>
+                <input type="range" min="0" max="100" value="25" oninput="updateFov(this.value)">
+            </div>
+            
+            <span class="section-title">Local do Tiro</span>
+            <select><option>Cabeça</option><option>Pescoço</option><option>Peito</option><option>Quadril</option></select>
+        </div>
+    </div>
+
+    <div id="auxilio" class="content">
+        <div id="aux-functions" class="disabled-ui">
+            <div class="section-title">Otimização de Hardware</div>
+            <div class="row"><span class="label">Limpeza de RAM (Deep Scan)</span><div class="switch" onclick="toggleSwitch(this)"></div></div>
+            <div class="row"><span class="label">Priorizar CPU (Kernel)</span><div class="switch" onclick="toggleSwitch(this)"></div></div>
+            <div class="row"><span class="label">GPU Turbo Boost</span><div class="switch" onclick="toggleSwitch(this)"></div></div>
+            <div class="row"><span class="label">Forçar 90 FPS Constantes</span><div class="switch" onclick="toggleSwitch(this)"></div></div>
+            <div class="row"><span class="label">Anti-Lag v5.0 (Vip)</span><div class="switch" onclick="toggleSwitch(this)"></div></div>
+            <div class="row"><span class="label">Fixar Ping (Estabilizar)</span><div class="switch" onclick="toggleSwitch(this)"></div></div>
+            
+            <div class="section-title">Visual & Sensibilidade</div>
+            <div class="row"><span class="label">Remover Sombras</span><div class="switch" onclick="toggleSwitch(this)"></div></div>
+            <div class="row"><span class="label">Remover Névoa/Gelo</span><div class="switch" onclick="toggleSwitch(this)"></div></div>
+            <div class="row"><span class="label">Touch 100% Sensibilidade</span><div class="switch" onclick="toggleSwitch(this)"></div></div>
+            <div class="row"><span class="label">Reduzir Delay de Resposta</span><div class="switch" onclick="toggleSwitch(this)"></div></div>
+            <div class="row"><span class="label">Limpar Cache de Logs FF</span><div class="switch" onclick="toggleSwitch(this)"></div></div>
+        </div>
+    </div>
+
+    <div id="info" class="content">
+        <div class="section-title">Segurança Máxima</div>
+        <div class="row"><div class="check-box" onclick="activateBypass(this)"></div><span class="label">Bypass Analista (Ghost Mode)</span></div>
+        <div class="row"><div class="check-box" onclick="toggleCheck(this)"></div><span class="label">Anti-Ban v2026</span></div>
+        <div class="row"><div class="check-box" onclick="toggleCheck(this)"></div><span class="label">Ocultar App das Gravações</span></div>
+        <div class="row"><div class="check-box" onclick="toggleCheck(this)"></div><span class="label">Proteger UID</span></div>
+
+        <div style="margin-top: 30px; text-align: center; border-top: 1px solid #222; padding-top: 15px;">
+            <p style="font-size: 12px; color: var(--primary-red); font-weight: bold; margin: 0;">GORDIN DO XIT OFFICIAL</p>
+            <p style="font-size: 10px; color: #444;">Versão 1.109.X | Supreme Mobile</p>
+            <img src="https://i.ibb.co/JWzrtJ9v/IMG-20260327-015146.jpg" style="width: 40px; border-radius: 50%; margin-top: 10px; border: 1px solid #333;">
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- VARIÁVEIS DE CONTROLE ---
+    const bubble = document.getElementById('floating-bubble');
+    const panel = document.getElementById('mainPanel');
+    const fovCircle = document.getElementById('fov-circle');
+    const terminal = document.getElementById('injection-terminal');
+    let functionsEnabled = false;
+    let wakeLock = null;
+
+    // --- PROTOCOLO SEGUNDO PLANO (KEEP-ALIVE) ---
+    async function requestWakeLock() {
+        try {
+            if ('wakeLock' in navigator) {
+                wakeLock = await navigator.wakeLock.request('screen');
+                console.log('Wake Lock Ativo: O app não vai dormir.');
+            }
+        } catch (err) {
+            console.error(`${err.name}, ${err.message}`);
+        }
+    }
+
+    function manterAppVivo() {
+        setInterval(() => {
+            if (functionsEnabled) {
+                // Pequena carga para manter a CPU ativa no Chrome
+                const dummy = Math.sqrt(Math.random() * 1000);
+            }
+        }, 1000);
+    }
+
+    // --- INTERFACE DO PAINEL ---
+    bubble.onclick = () => { panel.style.display = 'flex'; bubble.style.display = 'none'; };
+    function closePanel() { panel.style.display = 'none'; bubble.style.display = 'flex'; }
+
+    function toggleMaster(el) {
+        el.classList.toggle('on');
+        functionsEnabled = el.classList.contains('on');
+        document.getElementById('trick-functions').classList.toggle('disabled-ui', !functionsEnabled);
+        document.getElementById('aux-functions').classList.toggle('disabled-ui', !functionsEnabled);
+        
+        if(functionsEnabled) {
+            requestWakeLock();
+            manterAppVivo();
+            updateFov(document.querySelector('input[type=range]').value);
+        } else {
+            fovCircle.style.display = 'none';
+            if (wakeLock) wakeLock.release();
+        }
+    }
+
+    function updateFov(val) {
+        document.getElementById('fovVal').innerText = val + 'px';
+        if (functionsEnabled && val > 0) {
+            fovCircle.style.display = 'block';
+            fovCircle.style.width = val*2 + 'px';
+            fovCircle.style.height = val*2 + 'px';
+        } else {
+            fovCircle.style.display = 'none';
+        }
+    }
+
+    function openTab(evt, tabName) {
+        let contents = document.getElementsByClassName("content");
+        for (let i = 0; i < contents.length; i++) contents[i].classList.remove("active");
+        let tabs = document.getElementsByClassName("tab");
+        for (let i = 0; i < tabs.length; i++) tabs[i].classList.remove("active");
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    }
+
+    function toggleCheck(el) { el.classList.toggle('active'); }
+    function toggleSwitch(el) { el.classList.toggle('on'); }
+
+    function activateBypass(el) {
+        el.classList.add('active');
+        bubble.style.display = 'none';
+        panel.style.display = 'none';
+        fovCircle.style.display = 'none';
+    }
+
+    // --- ANIMAÇÃO HACKER DE INJEÇÃO ---
+    function iniciarInjecao() {
+        panel.style.display = 'none';
+        terminal.style.display = 'block';
+        terminal.innerHTML = "";
+        
+        const sequence = [
+            "> INICIALIZANDO COMPILADOR LUA v5.4...",
+            "> CONECTANDO AO SERVIDOR GORDIN_XIT_2026...",
+            "> [OK] CONEXÃO ESTABELECIDA.",
+            "> BUSCANDO PROCESSO: com.dts.freefireth",
+            "> PROCESSO ENCONTRADO! PID: " + Math.floor(Math.random() * 8000 + 1000),
+            "> ACESSANDO MEMÓRIA VIRTUAL [0x7FFD2...]",
+            "> INJETANDO HOOK: aimbot_full_v2.so",
+            "> [INJECT] Headshot calibrado a 100%.",
+            "> [INJECT] Aim Lock ativado no canal 12.",
+            "> [INJECT] Magic Bullet mapeado na hitbox.",
+            "> BYPASSANDO ANTICHEAT (MANTIS/ANALISTA)...",
+            "> [OK] BYPASS APLICADO COM SUCESSO.",
+            "> OTIMIZANDO BUFFER DE VÍDEO PARA 90 FPS...",
+            "> LIMPANDO REGISTROS DE SEGURANÇA DO ANDROID...",
+            "> SCRIPTS INJETADOS COM SUCESSO!",
+            "> REINICIANDO O MOTOR DO JOGO...",
+            "> BOA SORTE, GORDIN DO XIT!"
+        ];
+
+        let i = 0;
+        const printInterval = setInterval(() => {
+            if (i < sequence.length) {
+                const line = document.createElement('div');
+                line.textContent = sequence[i];
+                terminal.appendChild(line);
+                terminal.scrollTop = terminal.scrollHeight;
+                i++;
+            } else {
+                clearInterval(printInterval);
+                setTimeout(() => {
+                    window.location.href = "freefire://"; 
+                    setTimeout(() => {
+                        terminal.style.display = 'none';
+                        bubble.style.display = 'flex';
+                    }, 1500);
+                }, 1500);
+            }
+        }, 400);
+    }
+
+    // --- RESTAURAÇÃO (3 CLIQUES) ---
+    let clickTracker = 0;
+    document.body.onclick = () => {
+        if (bubble.style.display === 'none' && panel.style.display === 'none') {
+            clickTracker++;
+            setTimeout(() => { clickTracker = 0; }, 1200);
+            if (clickTracker === 3) {
+                bubble.style.display = 'flex';
+                clickTracker = 0;
+            }
+        }
+    };
+
+    // --- SERVICE WORKER (PWA) ---
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').then(reg => {
+            // Permite sincronização em segundo plano se disponível
+            if ('sync' in reg) {
+                reg.sync.register('keep-alive');
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
